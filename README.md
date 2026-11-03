@@ -1,36 +1,40 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Screenfit — see your next TV at real size
 
-## Getting Started
+A Next.js PWA that previews bigger TVs in your room with AR, calibrated against the TV you already own.
 
-First, run the development server:
+## How it works
+
+1. **Tell it your current TV** (e.g. 40″, 16:9).
+2. **Calibrate** — point the camera at that TV. Auto-fit finds the screen; drag corners/edges or pinch to stretch the frame until it hugs the real screen. Freeze the image to adjust comfortably, or use a photo.
+3. **Scale up** — pick any preset or custom size (slider, ± or pinch). The new TV is drawn from the same ruler, sitting on the same stand or centered on the wall. Save/share a snapshot.
+
+### AR modes
+
+| Mode | Where | How scale is known |
+| --- | --- | --- |
+| Camera AR | Any phone/browser with a camera | Your real TV is the ruler (calibration) |
+| True-scale 3D AR | Android Chrome (WebXR) | Device depth tracking + optional calibration factor (place a virtual 40″ on your 40″, pinch to match) |
+| View in 3D AR | iPhone/iPad (AR Quick Look) | Real-size USDZ generated on the fly, scaling locked, uses the same calibration factor |
+
+Plus a size explorer with a to-scale side view and a seating-distance recommender (SMPTE 30° / THX 40°).
+
+## Develop
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev          # http://localhost:3000
+npm run dev:phone    # HTTPS on your LAN so the phone camera works
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Camera and WebXR require HTTPS (localhost is exempt). With `dev:phone`, open `https://<your-computer-ip>:3000` on the phone and accept the self-signed certificate.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The service worker (`public/sw.js`) only registers in production builds: `npm run build && npm start`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Code map
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `lib/tv.ts` — size math (dimensions, viewing angle, recommendations)
+- `lib/store.ts` — persisted settings (localStorage)
+- `lib/detect.ts` — on-device TV detection (dark/bright rectangle finder)
+- `components/CameraAR.tsx` — camera overlay: ask → calibrate → compare
+- `components/XRView.tsx` — WebXR hit-test placement (floor, table, wall)
+- `lib/quicklook.ts` — USDZ export for iOS AR Quick Look
